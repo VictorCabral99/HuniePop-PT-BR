@@ -1,0 +1,16 @@
+# Local / large binaries
+assets/original/
+build/
+dist/
+*.assets
+*.asset
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Optional: keep export tracked; ignore huge dumps if added later
+export/raw/
+export_run.log
+*.tmp

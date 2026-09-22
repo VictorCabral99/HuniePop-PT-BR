@@ -1,0 +1,18 @@
+﻿sep=$
+id$category$text$pt_BR$char_diff$notes
+ui$ui$Girl Finder$Busca girls$=LEN(D2)-LEN(C2)$inplace length-safe
+ui$ui$Ask on Date$Chamar date$=LEN(D3)-LEN(C3)$inplace length-safe
+ui$ui$Check Profile$Ver perfil$=LEN(D4)-LEN(C4)$inplace length-safe
+ui$ui$Easy$Fac.$=LEN(D5)-LEN(C5)$inplace length-safe
+ui$ui$Female$Mulher$=LEN(D6)-LEN(C6)$inplace length-safe
+ui$ui$Full Screen$Tela cheia$=LEN(D7)-LEN(C7)$inplace length-safe
+ui$ui$Full Voice$Voz total$=LEN(D8)-LEN(C8)$inplace length-safe
+ui$ui$Hard$Dif.$=LEN(D9)-LEN(C9)$inplace length-safe
+ui$ui$High$Alto$=LEN(D10)-LEN(C10)$inplace length-safe
+ui$ui$Low$Min$=LEN(D11)-LEN(C11)$inplace length-safe
+ui$ui$Male$Masc$=LEN(D12)-LEN(C12)$inplace length-safe
+ui$ui$Medium$Medio$=LEN(D13)-LEN(C13)$inplace length-safe
+ui$ui$Purchase Gifts$Comprar gifts$=LEN(D14)-LEN(C14)$inplace length-safe
+ui$ui$Talk With Her$Falar com ela$=LEN(D15)-LEN(C15)$inplace length-safe
+ui$ui$View Inventory$Ver inventario$=LEN(D16)-LEN(C16)$inplace length-safe
+ui$ui$Windowed$Janela$=LEN(D17)-LEN(C17)$inplace length-safe

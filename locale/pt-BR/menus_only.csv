@@ -1,0 +1,26 @@
+﻿sep=$
+category$text$pt_BR$char_diff$notes
+ui$Girl Finder$Busca girls$=LEN(C2)-LEN(B2)$menu
+ui$Ask on Date$Chamar date$=LEN(C3)-LEN(B3)$menu
+ui$Talk With Her$Falar com ela$=LEN(C4)-LEN(B4)$menu
+ui$Purchase Gifts$Comprar gifts$=LEN(C5)-LEN(B5)$menu
+ui$Check Profile$Ver perfil$=LEN(C6)-LEN(B6)$menu
+ui$View Inventory$Ver inventario$=LEN(C7)-LEN(B7)$menu
+ui$Full Screen$Tela Cheia$=LEN(C8)-LEN(B8)$menu
+ui$Full Voice$Voz total$=LEN(C9)-LEN(B9)$menu
+ui$Windowed$Janela$=LEN(C10)-LEN(B10)$menu
+ui$Easy$Fac.$=LEN(C11)-LEN(B11)$menu
+ui$Hard$Dif.$=LEN(C12)-LEN(B12)$menu
+ui$Normal$Normal$=LEN(C13)-LEN(B13)$menu
+ui$High$Alto$=LEN(C14)-LEN(B14)$menu
+ui$Medium$Medio$=LEN(C15)-LEN(B15)$menu
+ui$Low$Min$=LEN(C16)-LEN(B16)$menu
+ui$Male$Masc$=LEN(C17)-LEN(B17)$menu
+ui$Female$Mulher$=LEN(C18)-LEN(B18)$menu
+ui$Boops$Boops$=LEN(C19)-LEN(B19)$menu keep
+ui$Girls$Gatas$=LEN(C20)-LEN(B20)$app celular
+ui$Store$Loja$=LEN(C21)-LEN(B21)$app celular
+ui$Traits$Tracos$=LEN(C22)-LEN(B22)$app celular
+ui$Messages$Recados$=LEN(C23)-LEN(B23)$app celular
+ui$Settings$Ajustes$=LEN(C24)-LEN(B24)$app celular
+ui$Inventory$Mochila$=LEN(C25)-LEN(B25)$app celular
