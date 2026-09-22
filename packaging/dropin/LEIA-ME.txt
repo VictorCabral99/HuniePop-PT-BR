@@ -1,33 +1,47 @@
-HuniePop PT-BR — alfa 0.0.1 (fan translation, texto apenas)
-============================================================
+HuniePop PT-BR — alfa 0.0.1 (fan translation)
+=============================================
 
-Patch de texto em portugues brasileiro para o HuniePop (Steam).
-Audio/voz continua em ingles.
+Traducao NAO OFICIAL de texto para portugues do Brasil.
+Audio/voz continua em ingles. Voce precisa ter o jogo na Steam.
 
-COMO INSTALAR (copiar e colar)
-------------------------------
-1. Feche o HuniePop.
-2. Abra a pasta do jogo na Steam:
-   Botao direito no HuniePop -> Gerenciar -> Procurar arquivos locais
-3. (Recomendado) Faca backup de:
-     HuniePop_Data\resources.assets
-     HuniePop_Data\sharedassets0.assets
-4. COPIE a pasta "HuniePop_Data" DESTE pacote e COLE em cima da
-   pasta do jogo (mesclar / substituir quando o Windows perguntar).
+COMO INSTALAR (passo a passo)
+-----------------------------
 
-Pronto.
+1) Feche o HuniePop por completo.
 
-VERSAO
-------
-alfa 0.0.1 — dialogo + UI em PT-BR (rascunho; tom ainda em revisao).
-Se algo quebrar: Steam -> Verificar integridade dos arquivos do jogo.
+2) Abra a pasta do jogo:
+   Steam -> biblioteca -> botao direito em HuniePop
+   -> Gerenciar -> Procurar arquivos locais
+   (ex.: ...\Steam\steamapps\common\HuniePop)
 
-RESTAURAR INGLES
+3) BACKUP (recomendado):
+   Dentro de HuniePop_Data, copie para outro lugar:
+     - resources.assets
+     - sharedassets0.assets
+
+4) Neste pacote, COPIE a pasta "HuniePop_Data" e COLE
+   na pasta do jogo (em cima da HuniePop_Data que ja existe).
+   Quando o Windows pedir para substituir arquivos: SIM.
+
+5) Abra o jogo pela Steam. Textos devem estar em PT-BR.
+
+DEU PROBLEMA?
+-------------
+- Tela preta / nao abre:
+  Steam -> Propriedades do HuniePop -> Arquivos instalados
+  -> Verificar integridade dos arquivos do jogo
+  Depois instale o patch de novo (passos 2 e 4).
+
+- Continua em ingles:
+  Voce colou no lugar errado. A HuniePop_Data deste zip
+  precisa ficar DENTRO da pasta do HuniePop da Steam.
+
+VOLTAR AO INGLES
 ----------------
-1. Devolva os .assets do backup, OU
-2. Steam -> Verificar integridade dos arquivos do jogo
+1) Devolva os dois .assets do backup, OU
+2) Steam -> Verificar integridade dos arquivos do jogo
 
-AVISO LEGAL
------------
-Fan patch nao oficial. Voce precisa ter o jogo comprado na Steam.
-Nao redistribuimos o executavel do jogo — so os arquivos de texto/UI patchados.
+AVISO
+-----
+Fan patch nao oficial. Nao inclui o executavel do jogo —
+so arquivos de texto/UI patchados. Versao alfa: tom ainda em revisao.
