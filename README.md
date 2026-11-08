@@ -103,7 +103,14 @@ Resumo rápido:
 
 ```bash
 python -m pip install -r requirements.txt
-# editar locale/pt-BR/unique_texts_ascii.csv
+python scripts/curate.py
+```
+
+Abre a curadoria em `http://127.0.0.1:8765`. Cada cena aparece com a tradução já aplicada. Do lado, o inglês e o português ficam juntos: dá para corrigir, aprovar e marcar o que ainda incomoda. Salvar grava `locale/pt-BR/unique_texts.csv` (com acento, para revisar) e regenera `unique_texts_ascii.csv` (sem acento, que é o arquivo que entra no jogo).
+
+Para instalar no HuniePop, com o jogo fechado:
+
+```bash
 python scripts/apply_patch_expand.py --install
 python scripts/apply_ui_images.py --assets build/patch_expand/sharedassets0.assets --install
 python scripts/build_dropin.py --zip

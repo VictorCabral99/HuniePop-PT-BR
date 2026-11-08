@@ -10,6 +10,7 @@
 ## Desenvolvedores
 
 ```bash
+python scripts/curate.py
 python scripts/apply_patch_expand.py --source assets/original/backup_... --locale locale/pt-BR/unique_texts_ascii.csv --install
 python scripts/apply_ui_images.py --assets build/patch_expand/sharedassets0.assets --install
 python scripts/build_dropin.py --zip

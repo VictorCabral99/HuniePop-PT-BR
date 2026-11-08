@@ -43,6 +43,15 @@ Diálogos no asset têm `object_name` de cena (`IntroAiko`, `DateGreeting`, …)
 
 Fontes Exo bitmap = ASCII. `fold_ascii_pt.py` mantém a letra (`não`→`nao`). Ver [image-text.md](image-text.md).
 
+## Curadoria
+
+`python scripts/curate.py` sobe uma mesa local (só em `127.0.0.1`).
+
+- Leitura **No jogo**: as falas já entram em PT-BR, na ordem da cena, com a variante jogador/jogadora.
+- Aba **Frases**: inglês e tradução lado a lado, com filtros (tom de Portugal, pausa perdida, rótulo interno, sem tradução).
+- A correção grava `locale/pt-BR/unique_texts.csv`. O status (aprovada / revisar) fica em `locale/pt-BR/review.json` e não entra no patch.
+- Cada gravação regenera `unique_texts_ascii.csv` via `fold_ascii_pt.export_game_csv`. Esse é o arquivo do `apply_patch_expand.py`.
+
 ## Instalação pública
 
 Ver [install.md](install.md). Drop-in = copiar `HuniePop_Data`.
