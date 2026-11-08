@@ -214,16 +214,19 @@ def transform(text: str) -> str:
     return fold_ascii(colloquialize(text))
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--src", type=Path, default=SRC)
-    ap.add_argument("--out", type=Path, default=OUT)
-    args = ap.parse_args()
+def _excel_col(n: int) -> str:
+    s = ""
+    while n:
+        n, r = divmod(n - 1, 26)
+        s = chr(65 + r) + s
+    return s
 
-    rows, _ = read_locale_rows(args.src)
+
+def export_game_csv(src: Path, out: Path) -> dict[str, int]:
+    """Write the ASCII file the game patch reads. Does not modify ``src``."""
+    rows, _ = read_locale_rows(src)
     if not rows or "pt_BR" not in rows[0]:
-        print("CSV needs pt_BR column")
-        return 1
+        raise ValueError("CSV needs pt_BR column")
 
     changed = 0
     accented = 0
@@ -243,49 +246,38 @@ def main() -> int:
         fieldnames = fieldnames[:i] + ["char_diff"] + fieldnames[i:]
     elif "char_diff" not in fieldnames:
         fieldnames = fieldnames + ["char_diff"]
-    # stable order: char_diff right after pt_BR
     if "pt_BR" in fieldnames and "char_diff" in fieldnames:
         fieldnames = [f for f in fieldnames if f != "char_diff"]
         fieldnames.insert(fieldnames.index("pt_BR") + 1, "char_diff")
 
     text_i = fieldnames.index("text") + 1
     pt_i = fieldnames.index("pt_BR") + 1
-
-    def _excel_col(n: int) -> str:
-        s = ""
-        while n:
-            n, r = divmod(n - 1, 26)
-            s = chr(65 + r) + s
-        return s
-
     # Excel consumes sep=$: header=row1, data from row2
     for i, row in enumerate(rows):
         row["char_diff"] = (
             f"=LEN({_excel_col(pt_i)}{i + 2})-LEN({_excel_col(text_i)}{i + 2})"
         )
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    write_locale_rows(args.out, rows, fieldnames)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    write_locale_rows(out, rows, fieldnames)
+    return {"rows": len(rows), "changed": changed, "accented": accented}
 
-    print(f"rows={len(rows)} changed={changed} had_accents~={accented} -> {args.out}")
-    # samples
-    samples = [
-        ("Não tenha",),
-        ("faço",),
-        ("rapariga",),
-        ("Acção",),
-    ]
-    for row in rows[:50]:
-        pass
-    shown = 0
-    for row in rows:
-        pt = row["pt_BR"]
-        en = row.get("text") or ""
-        if shown >= 8:
-            break
-        if any(x in (row.get("pt_BR") or "") for x in ("nao ", "garota", "faco", "cao")):
-            print(f"  EN: {en[:60]!r}")
-            print(f"  PT: {pt[:80]!r}")
-            shown += 1
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--src", type=Path, default=SRC)
+    ap.add_argument("--out", type=Path, default=OUT)
+    args = ap.parse_args()
+
+    try:
+        stats = export_game_csv(args.src, args.out)
+    except ValueError:
+        print("CSV needs pt_BR column")
+        return 1
+
+    print(
+        f"rows={stats['rows']} changed={stats['changed']} "
+        f"had_accents~={stats['accented']} -> {args.out}"
+    )
     return 0
 
 

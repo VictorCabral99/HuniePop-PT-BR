@@ -46,15 +46,16 @@ def write_locale_rows(path: Path, rows: list[dict], fields: list[str] | None = N
         raise ValueError("no rows")
     fields = fields or list(rows[0].keys())
     path = path.with_suffix(".csv")
+    # LF matches the committed locale files. Excel still honors the sep=$ line.
     with path.open("w", encoding="utf-8-sig", newline="") as f:
-        f.write(SEP_LINE + "\r\n")
+        f.write(SEP_LINE + "\n")
         w = csv.DictWriter(
             f,
             fieldnames=fields,
             delimiter=DELIMITER,
             quoting=csv.QUOTE_MINIMAL,
             extrasaction="ignore",
-            lineterminator="\r\n",
+            lineterminator="\n",
         )
         w.writeheader()
         w.writerows(rows)

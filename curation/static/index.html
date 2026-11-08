@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Curadoria PT-BR · HuniePop</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <p class="kicker">HuniePop · texto</p>
+      <h1>Curadoria PT-BR</h1>
+    </div>
+    <nav class="modes" aria-label="Modo">
+      <button type="button" id="mode-jogo" class="mode is-on" data-mode="jogo">No jogo</button>
+      <button type="button" id="mode-frases" class="mode" data-mode="frases">Frases</button>
+    </nav>
+    <div class="stats" id="stats" aria-live="polite"></div>
+    <button type="button" class="ghost" id="apply-btn">Gravar arquivo do jogo</button>
+  </header>
+
+  <p class="banner" id="banner">
+    A tradução já está nesta leitura. Salvar uma correção regrava
+    <code>locale/pt-BR/unique_texts.csv</code> e o arquivo sem acento que o patch instala no HuniePop.
+  </p>
+  <p class="error" id="error" hidden></p>
+
+  <div class="desk" id="desk">
+    <aside class="scenes" id="scene-pane">
+      <label class="search">
+        <span class="sr">Buscar cena</span>
+        <input id="scene-search" type="search" placeholder="Buscar cena ou personagem" autocomplete="off">
+      </label>
+      <div id="scene-list"></div>
+    </aside>
+
+    <main class="stage-wrap" id="stage-pane">
+      <div class="stage-bar" id="stage-bar">
+        <div>
+          <p class="kicker" id="scene-kicker">Cena</p>
+          <h2 id="scene-title">Carregando…</h2>
+        </div>
+        <div class="toggles">
+          <div class="segment" role="group" aria-label="Variante de gênero">
+            <button type="button" id="gender-jogador" class="is-on" data-gender="jogador">Jogador</button>
+            <button type="button" id="gender-jogadora" data-gender="jogadora">Jogadora</button>
+          </div>
+          <label class="check"><input type="checkbox" id="show-en"> Inglês na fala</label>
+          <label class="check"><input type="checkbox" id="show-game"> Sem acento, como no jogo</label>
+        </div>
+      </div>
+      <p class="hint" id="scene-hint"></p>
+      <div id="lines" class="lines"></div>
+
+      <section class="phrase-pane" id="phrase-pane" hidden>
+        <div class="filters" id="filters"></div>
+        <label class="search wide">
+          <span class="sr">Buscar frase</span>
+          <input id="phrase-search" type="search" placeholder="Buscar em inglês ou português" autocomplete="off">
+        </label>
+        <p class="hint" id="phrase-count"></p>
+        <div id="phrase-list" class="phrase-list"></div>
+        <button type="button" class="ghost" id="phrase-more" hidden>Mostrar mais</button>
+      </section>
+    </main>
+
+    <aside class="editor" id="editor">
+      <p class="editor-empty" id="editor-empty">Escolha uma fala para ver o inglês e a tradução.</p>
+      <form id="editor-form" hidden>
+        <p class="kicker" id="ed-kicker"></p>
+        <p class="where" id="ed-where"></p>
+        <label class="field">
+          <span>Inglês</span>
+          <div id="ed-en" class="read"></div>
+        </label>
+        <label class="field">
+          <span>Tradução</span>
+          <textarea id="pt-input" rows="5" spellcheck="true" lang="pt-BR"></textarea>
+        </label>
+        <label class="field">
+          <span>Como entra no jogo</span>
+          <div id="ed-game" class="read game"></div>
+        </label>
+        <div id="ed-flags" class="flag-list"></div>
+        <label class="field">
+          <span>Nota</span>
+          <input id="note-input" type="text" maxlength="500" placeholder="O que ainda incomoda nesta frase">
+        </label>
+        <div class="actions">
+          <button type="submit" class="primary" id="save-btn">Salvar</button>
+          <button type="button" id="ok-btn">Aprovar</button>
+          <button type="button" id="fix-btn">Marcar revisão</button>
+          <button type="button" id="keep-btn">Deixar em inglês</button>
+        </div>
+        <div class="actions secondary">
+          <button type="button" class="texty" id="next-alert">Próximo alerta</button>
+          <p class="save-state" id="save-state" aria-live="polite"></p>
+        </div>
+      </form>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <p>A voz continua em inglês. No Windows, com o jogo fechado: <code>python scripts/apply_patch_expand.py --install</code></p>
+  </footer>
+  <script src="/app.js"></script>
+</body>
+</html>
