@@ -1,4 +1,4 @@
-HuniePop PT-BR — alfa 0.0.1 (fan translation)
+HuniePop PT-BR — beta 0.1.0 (fan translation)
 =============================================
 
 Traducao NAO OFICIAL de texto para portugues do Brasil.
@@ -25,6 +25,11 @@ COMO INSTALAR (passo a passo)
 
 5) Abra o jogo pela Steam. Textos devem estar em PT-BR.
 
+Botoes e menus que o jogo desenha como imagem tambem vem
+traduzidos no sharedassets0.assets: iniciar jogo, Opcoes,
+SEM DADOS, Continuar, Fechar, Jogo salvo e o aviso de clique
+na tela de titulo.
+
 DEU PROBLEMA?
 -------------
 - Tela preta / nao abre:
@@ -44,4 +49,6 @@ VOLTAR AO INGLES
 AVISO
 -----
 Fan patch nao oficial. Nao inclui o executavel do jogo —
-so arquivos de texto/UI patchados. Versao alfa: tom ainda em revisao.
+so arquivos de texto/UI patchados. Versao beta: 161 falas revisadas
+nesta atualizacao (respostas de date e quiz). O tom ainda pode soar
+estranho em alguns trechos - reporte no GitHub do projeto.

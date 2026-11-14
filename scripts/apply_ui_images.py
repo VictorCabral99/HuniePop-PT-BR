@@ -99,7 +99,10 @@ def paste_sprites(atlas: Image.Image, entries: list[dict], pt_dir: Path) -> tupl
                     flush=True,
                 )
                 continue
-        atlas.paste(packed, (x0, y0), packed)
+        # Replace the whole UV rect: sprites with baked alpha (title prompt,
+        # NO DATA, hint strip) keep glyph pixels at partial alpha, so pasting
+        # with the sprite as mask would blend the old text back in.
+        atlas.paste(packed, (x0, y0))
         n += 1
         print(f"  pasted {name} @ {box}", flush=True)
     return atlas, n

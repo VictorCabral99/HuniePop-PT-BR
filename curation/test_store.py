@@ -8,7 +8,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from store import Store, flags_for
+from store import Store, fit_budget, flags_for, is_choice_label
 from fold_ascii_pt import export_game_csv
 from locale_csv import read_locale_rows, write_locale_rows
 
@@ -28,6 +28,18 @@ class FlagTests(unittest.TestCase):
         self.assertNotIn("igual", flags_for("Awwwww!", "Awwwww!"))
         self.assertIn("igual", flags_for("Hiii daddy...", "Hiii daddy..."))
         self.assertIn("igual", flags_for("I hope to see you again soon.", "I hope to see you again soon."))
+
+    def test_character_budget(self):
+        self.assertEqual(fit_budget("Easy", "ui"), (4, "botao"))
+        self.assertIn("longo", flags_for("Easy", "Fácil", "ui"))
+        self.assertNotIn("longo", flags_for("Easy", "Fac.", "ui"))
+        self.assertIn("longo", flags_for("Mall", "Centro Comercial", "other"))
+        self.assertIn("longo", flags_for("Hi there!", "Oi! Tudo bem com você?", "dialogue"))
+        self.assertNotIn("longo", flags_for("Hi there!", "Oi!", "dialogue"))
+        self.assertEqual(fit_budget("Hi there!", "dialogue"), (len("Hi there!"), "fala"))
+        self.assertEqual(fit_budget("She was incredible.", "dialogue", "escolha"), (19, "botao"))
+        self.assertTrue(is_choice_label("steps[3].responseOptions[0].text"))
+        self.assertFalse(is_choice_label("steps[3].responseOptions[0].steps[0].sceneLine.dialogLine.text"))
 
     def test_game_preview_folds(self):
         flags = flags_for("What am I gonna do with you?", "O que vou fazer contigo?")
@@ -123,6 +135,9 @@ class UpdateTests(unittest.TestCase):
         scene = self.store.scene("IntroAiko")
         self.assertEqual(scene["lines"][0]["role"], "fala")
         self.assertEqual(scene["lines"][0]["pt"], "Beleza! Quero sair com você.")
+        self.assertEqual(saved["fit"]["kind"], "fala")
+        self.assertEqual(saved["fit"]["limit"], saved["fit"]["en"])
+        self.assertEqual(saved["fit"]["limit"], len("Yeah, okay! I'd love to go out with you."))
 
     def test_rejects_newlines_and_unknown_ids(self):
         with self.assertRaises(ValueError):

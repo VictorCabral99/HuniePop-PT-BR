@@ -71,6 +71,12 @@ def load_translations(*csv_paths: Path) -> dict[str, str]:
                 skipped += 1
                 continue
             mapping[en] = pt
+    # Some in-game strings are stored with a trailing newline (credits
+    # headers like "Art Team\n"); the length prefix then differs, so map
+    # that variant too and keep the break.
+    for en, pt in list(mapping.items()):
+        if "\n" not in en and en + "\n" not in mapping:
+            mapping[en + "\n"] = pt + "\n"
     if skipped:
         print(f"  Filtered out {skipped} unsafe translation entries", flush=True)
     return mapping

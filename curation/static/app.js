@@ -4,7 +4,7 @@ const FLAG_HELP = {
   eu: ["bad", "Soa como português de Portugal (tu, contigo, estás a…). Reescreva com você."],
   chave: ["bad", "Rótulo interno (success, morning…). Se o jogo compara essa palavra, deixe em inglês."],
   pausa: ["warn", "O inglês marca uma pausa ····· que sumiu na tradução."],
-  longo: ["warn", "Ficou bem mais longa. Pode cortar no botão ou na caixa de diálogo."],
+  longo: ["warn", "Ficou maior que a frase em inglês. Cada fala entra sozinha, então o que sobra numa não passa para a outra."],
   curto: ["warn", "Ficou bem mais curta. Confira se não caiu um pedaço."],
   reescrito: ["warn", "Ao gravar o arquivo do jogo, o script troca algumas palavras. Confira a prévia sem acento."],
   nome: ["ok", "Nome de personagem. Vazio mantém o inglês, que é o certo."],
@@ -32,6 +32,7 @@ const STORY = [
 
 const FILTERS = [
   ["alerta", "Alertas"],
+  ["estoura", "Não cabe"],
   ["aviso", "Avisos"],
   ["eu", "Tom de Portugal"],
   ["vazio", "Sem tradução"],
@@ -61,7 +62,7 @@ const state = {
   sceneId: "GameOpeningPart1",
   mode: "jogo",
   gender: "jogador",
-  showEn: false,
+  showEn: true,
   showGame: false,
   selected: null,
   query: "",
@@ -143,6 +144,7 @@ function recomputeDerived() {
     applied: state.strings.filter((item) => (item.pt || "").trim() && item.pt !== item.en).length,
     problems: state.strings.filter(needsReview).length,
     approved: state.strings.filter((item) => item.status === "ok").length,
+    overflows: state.strings.filter(overflows).length,
   };
   renderStats(stats);
   renderScenes();
@@ -155,6 +157,7 @@ function renderStats(stats) {
     ["", stats.total.toLocaleString("pt-BR"), "frases"],
     ["", stats.applied.toLocaleString("pt-BR"), "entram no jogo"],
     ["bad", stats.problems.toLocaleString("pt-BR"), "alertas"],
+    ["bad", (stats.overflows || 0).toLocaleString("pt-BR"), "não cabem"],
     ["ok", stats.approved.toLocaleString("pt-BR"), "aprovadas"],
   ];
   for (const [kind, strong, label] of bits) {
@@ -276,58 +279,73 @@ function lineText(line) {
 }
 
 function renderLines() {
-  const root = $("lines");
-  root.replaceChildren();
+  $("lines").replaceChildren();
   const scene = state.scene;
   if (!scene) return;
-  $("scene-kicker").textContent = scene.girl ? scene.girl : "História";
+  const lines = visibleLines();
+  const index = lines.findIndex((line) => line.id === state.selected);
+  const role = index >= 0 ? (ROLE_LABEL[lines[index].role] || "Fala") : "Fala";
+  $("scene-kicker").textContent = scene.girl ? `${scene.girl} · ${role}` : role;
   $("scene-title").textContent = sceneLabel(scene);
-  const hidden = scene.lines.filter((line) => {
-    if (state.gender === "jogador" && line.role === "jogadora") return true;
-    if (state.gender === "jogadora" && line.role === "jogador") return true;
-    return false;
-  }).length;
-  $("scene-hint").textContent = hidden
-    ? `${hidden} ${hidden === 1 ? "fala da outra variante está oculta" : "falas da outra variante estão ocultas"}. A fonte do jogo não tem acento.`
-    : "A fonte do jogo não tem acento: o arquivo instalado troca não por nao.";
+  $("scene-hint").textContent = lines.length
+    ? `${Math.max(index, 0) + 1} de ${lines.length}`
+    : "Nenhuma fala nesta variante.";
+}
 
-  for (const line of scene.lines) {
-    if (state.gender === "jogador" && line.role === "jogadora") continue;
-    if (state.gender === "jogadora" && line.role === "jogador") continue;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `bubble ${line.role}${line.id === state.selected ? " is-on" : ""}`;
-    button.dataset.id = line.id;
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.textContent = ROLE_LABEL[line.role] || "Fala";
-    if (needsReview(line)) {
-      const dot = document.createElement("span");
-      dot.className = "dot bad";
-      meta.append(dot);
-    } else if (line.status === "ok") {
-      const dot = document.createElement("span");
-      dot.className = "dot ok";
-      meta.append(dot);
-    }
-    const spoken = document.createElement("p");
-    const text = lineText(line);
-    fillText(spoken, text || "— sem tradução, fica em inglês —");
-    button.append(meta, spoken);
-    if (state.showEn) {
-      const en = document.createElement("p");
-      en.className = "en";
-      fillText(en, line.en);
-      button.append(en);
-    }
-    button.addEventListener("click", () => selectLine(line.id));
-    root.append(button);
+function overflows(item) {
+  const fit = item && item.fit;
+  return Boolean(fit && fit.used > fit.limit);
+}
+
+const FIT_PLACE = {
+  botao: ["no botão", "o botão corta"],
+  rotulo: ["no rótulo", "o rótulo corta"],
+  curto: ["nesse espaço", "esse espaço corta"],
+  fala: ["na caixa de diálogo", "a caixa corta"],
+  item: ["na descrição", "a descrição corta"],
+  mensagem: ["na mensagem", "a mensagem corta"],
+};
+
+function renderFit(item, shown) {
+  const el = $("fit-meter");
+  if (!el) return;
+  if (!item) {
+    el.replaceChildren();
+    el.className = "fit";
+    return;
   }
+  const fit = item.fit || { limit: (item.en || "").length, kind: "curto", en: (item.en || "").length };
+  const raw = shown == null ? $("pt-input").value : shown;
+  const used = raw.trim() ? raw.length : 0;
+  const enLen = fit.en != null ? fit.en : (item.en || "").length;
+  const over = used - enLen;
+  const place = FIT_PLACE[fit.kind] || FIT_PLACE.curto;
+  el.className = `fit${used === 0 ? "" : over > 0 ? " over" : " ok"}`;
+  let text;
+  if (used === 0) {
+    text = `A original tem ${enLen} caracteres ${place[0]}. Igual ou menor cabe.`;
+  } else if (over > 0) {
+    text = `${used} de ${enLen}. Passou ${over} nesta frase.`;
+  } else if (used === enLen) {
+    text = `${used} de ${enLen}. Igual à original.`;
+  } else {
+    text = `${used} de ${enLen}. Menor que a original.`;
+  }
+  el.replaceChildren();
+  const line = document.createElement("span");
+  line.textContent = text;
+  const bar = document.createElement("div");
+  bar.className = "fit-bar";
+  const fill = document.createElement("span");
+  fill.style.width = `${enLen > 0 ? Math.min(100, Math.round((used / enLen) * 100)) : 0}%`;
+  bar.append(fill);
+  el.append(line, bar);
 }
 
 function passesFilter(item) {
   if (state.cat && item.cat !== state.cat) return false;
   if (state.flag === "alerta" && !needsReview(item)) return false;
+  if (state.flag === "estoura" && !overflows(item)) return false;
   if (state.flag === "aviso" && !warningFlags(item.flags).length) return false;
   if (state.flag === "ok" && item.status !== "ok") return false;
   if (state.flag === "fix" && item.status !== "fix") return false;
@@ -449,8 +467,9 @@ function renderEditor() {
   $("pt-input").value = item.pt || "";
   $("note-input").value = item.note || "";
   fillText($("ed-game"), item.game || "");
+  renderFit(item, item.game || "");
   renderFlags(item.flags);
-  $("ok-btn").textContent = item.status === "ok" ? "Tirar aprovação" : "Aprovar";
+  $("ok-btn").textContent = item.status === "ok" ? "Tirar aprovação" : "Aprovar e próxima";
   $("fix-btn").textContent = item.status === "fix" ? "Tirar marcação" : "Marcar revisão";
   const when = fmtWhen(item.updated);
   $("save-state").textContent = when ? `salvo ${when}` : "";
@@ -477,16 +496,90 @@ async function selectLine(id, options = {}) {
   }
   state.selected = id;
   renderEditor();
+  if (state.scene) renderLines();
   document.querySelectorAll(".bubble, .phrase").forEach((node) => {
     node.classList.toggle("is-on", node.dataset.id === id);
   });
   if (options.scroll !== false) {
     const bubble = document.querySelector(`.bubble[data-id="${CSS.escape(id)}"]`);
     if (bubble) bubble.scrollIntoView({ block: "nearest" });
+    const phrase = document.querySelector(`.phrase[data-id="${CSS.escape(id)}"]`);
+    if (phrase) phrase.scrollIntoView({ block: "nearest" });
   }
 }
 
-async function openScene(id, lineId) {
+function visibleLines() {
+  if (!state.scene) return [];
+  return state.scene.lines.filter((line) => {
+    if (!line.id) return false;
+    if (state.gender === "jogador" && line.role === "jogadora") return false;
+    if (state.gender === "jogadora" && line.role === "jogador") return false;
+    return true;
+  });
+}
+
+function orderedSceneIds() {
+  const ids = [];
+  ids.push(...sortStory(state.scenes.filter((scene) => !scene.girl)).map((scene) => scene.id));
+  for (const girl of GIRLS) {
+    const mine = state.scenes.filter((scene) => scene.girl === girl);
+    const main = mine.filter((scene) => !/question|quiz/i.test(scene.id));
+    const questions = sortNumbered(mine.filter((scene) => /question/i.test(scene.id)));
+    const quizzes = sortNumbered(mine.filter((scene) => /quiz/i.test(scene.id)));
+    ids.push(...main.map((scene) => scene.id), ...questions.map((scene) => scene.id), ...quizzes.map((scene) => scene.id));
+  }
+  return ids;
+}
+
+function upcomingAfter(currentId) {
+  if (state.mode === "frases") {
+    const matched = state.strings.filter(passesFilter);
+    const index = matched.findIndex((item) => item.id === currentId);
+    const next = index >= 0 ? matched[index + 1] : matched.find((item) => item.id !== currentId);
+    return next ? { lineId: next.id } : null;
+  }
+  const lines = visibleLines();
+  let index = -1;
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    if (lines[i].id === currentId) {
+      index = i;
+      break;
+    }
+  }
+  const next = lines[index + 1];
+  if (next) return { lineId: next.id };
+  const order = orderedSceneIds();
+  const sceneIndex = order.indexOf(state.sceneId);
+  const sceneId = order[sceneIndex + 1];
+  return sceneId ? { sceneId } : null;
+}
+
+function earlierThan(currentId) {
+  if (state.mode === "frases") {
+    const matched = state.strings.filter(passesFilter);
+    const index = matched.findIndex((item) => item.id === currentId);
+    const prev = index > 0 ? matched[index - 1] : null;
+    return prev ? { lineId: prev.id } : null;
+  }
+  const lines = visibleLines();
+  const index = lines.findIndex((line) => line.id === currentId);
+  if (index > 0) return { lineId: lines[index - 1].id };
+  const order = orderedSceneIds();
+  const sceneIndex = order.indexOf(state.sceneId);
+  const sceneId = order[sceneIndex - 1];
+  return sceneId ? { sceneId, last: true } : null;
+}
+
+async function goToStep(step) {
+  if (!step) return;
+  if (step.sceneId) {
+    await openScene(step.sceneId, null, { last: Boolean(step.last) });
+    return;
+  }
+  await selectLine(step.lineId);
+}
+
+async function openScene(id, lineId, options = {}) {
   showError("");
   const scene = await api(`/api/scene?id=${encodeURIComponent(id)}`);
   state.scene = scene;
@@ -500,7 +593,8 @@ async function openScene(id, lineId) {
   }
   renderScenes();
   renderLines();
-  const pick = lineId || scene.lines.find((line) => line.role !== "rotulo" && line.id)?.id || scene.lines.find((line) => line.id)?.id;
+  const visible = scene.lines.filter((line) => line.id && !(state.gender === "jogador" && line.role === "jogadora") && !(state.gender === "jogadora" && line.role === "jogador"));
+  const pick = lineId || (options.last ? visible[visible.length - 1]?.id : null) || visible.find((line) => line.role !== "rotulo")?.id || visible[0]?.id;
   if (pick) await selectLine(pick);
   history.replaceState(null, "", `#jogo/${id}`);
 }
@@ -583,6 +677,8 @@ async function previewSoon() {
         body: JSON.stringify({ id: item.id, pt: $("pt-input").value }),
       });
       fillText($("ed-game"), preview.game || "");
+      if (preview.fit) item.fit = { ...item.fit, ...preview.fit };
+      renderFit(item, preview.game || "");
       renderFlags(preview.flags);
       const bubble = document.querySelector(`.bubble[data-id="${CSS.escape(item.id)}"] p`);
       if (bubble && state.mode === "jogo") {
@@ -625,7 +721,9 @@ function bind() {
       state.gender = $(id).dataset.gender;
       $("gender-jogador").classList.toggle("is-on", state.gender === "jogador");
       $("gender-jogadora").classList.toggle("is-on", state.gender === "jogadora");
-      renderLines();
+      const lines = visibleLines();
+      if (lines.length && !lines.some((line) => line.id === state.selected)) selectLine(lines[0].id);
+      else renderLines();
     });
   }
   $("show-en").addEventListener("change", () => {
@@ -656,15 +754,39 @@ function bind() {
   $("pt-input").addEventListener("input", () => {
     state.dirty = true;
     $("save-state").textContent = "alteração ainda não salva";
+    renderFit(state.byId.get(state.selected), $("pt-input").value);
     previewSoon();
   });
   $("note-input").addEventListener("input", () => {
     state.dirty = true;
     $("save-state").textContent = "alteração ainda não salva";
   });
-  $("ok-btn").addEventListener("click", () => {
+  $("ok-btn").addEventListener("click", async () => {
     const item = state.byId.get(state.selected);
-    save({ status: item && item.status === "ok" ? "" : "ok" });
+    if (!item) return;
+    const approving = item.status !== "ok";
+    const next = approving ? upcomingAfter(item.id) : null;
+    const saved = await save({ status: approving ? "ok" : "" });
+    if (!saved || !approving) return;
+    if (!next) {
+      $("save-state").textContent = "aprovada · era a última";
+      return;
+    }
+    if (next.sceneId) {
+      await openScene(next.sceneId);
+      $("save-state").textContent = "aprovada · próxima cena";
+      return;
+    }
+    if (state.mode === "frases") {
+      const matched = state.strings.filter(passesFilter);
+      const index = matched.findIndex((row) => row.id === next.lineId);
+      if (index >= state.limit) {
+        state.limit = index + 1;
+        renderPhrases();
+      }
+    }
+    await selectLine(next.lineId);
+    $("save-state").textContent = "aprovada · próxima frase";
   });
   $("fix-btn").addEventListener("click", () => {
     const item = state.byId.get(state.selected);
@@ -676,6 +798,8 @@ function bind() {
     $("pt-input").value = item.en;
     save({ pt: item.en });
   });
+  $("prev-line").addEventListener("click", () => goToStep(earlierThan(state.selected)));
+  $("skip-line").addEventListener("click", () => goToStep(upcomingAfter(state.selected)));
   $("next-alert").addEventListener("click", () => nextAlert());
   $("apply-btn").addEventListener("click", async () => {
     if (state.dirty) {

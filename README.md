@@ -6,7 +6,7 @@ Tradução **não oficial** (feita por fãs) do jogo **HuniePop** (Steam) para *
 - **Não** traduz: voz / áudio (continua em inglês)  
 - Você **precisa ter o jogo comprado** na Steam — este projeto só troca os arquivos de texto
 
-> Versão atual: **alfa 0.0.1** (ainda em revisão — pode ter frases estranhas ou incompletas)
+> Versão atual: **beta 0.1.0** (texto revisado; ainda pode ter frases estranhas em alguns trechos)
 
 ---
 
@@ -15,9 +15,9 @@ Tradução **não oficial** (feita por fãs) do jogo **HuniePop** (Steam) para *
 ### 1. Baixe o patch
 
 1. Abra a página da release:  
-   **[v0.0.1 — Download](https://github.com/VictorCabral99/HuniePop-PT-BR/releases/tag/v0.0.1)**
+   **[v0.1.0 — Download](https://github.com/VictorCabral99/HuniePop-PT-BR/releases/tag/v0.1.0)**
 2. Em **Assets**, baixe o arquivo:  
-   `HuniePop_PT-BR-0.0.1.zip`  
+   `HuniePop_PT-BR-0.1.0.zip`  
    (~330 MB)
 3. Extraia o zip em qualquer pasta (botão direito → Extrair tudo…).  
    Você deve ver algo assim:
@@ -78,10 +78,12 @@ Pronto. Abra o HuniePop pela Steam — os textos devem aparecer em português.
 
 ---
 
-## O que esperar nesta alfa
+## O que esperar nesta beta
 
 - Menus e boa parte dos diálogos em PT-BR  
-- Tom ainda está sendo melhorado (às vezes soa “traduzido no Google”)  
+- Botões e menus que o jogo desenha como imagem também traduzidos (iniciar jogo, Opções, SEM DADOS, Continuar, Fechar, Jogo salvo, Créditos, Galeria)  
+- 161 falas revisadas nesta versão (respostas de date e quiz), corrigindo tom e estouro de texto  
+- Ainda pode soar “traduzido” em trechos não revisados  
 - Áudio das personagens permanece em inglês  
 - Não é um patch oficial da desenvolvedora
 
@@ -112,6 +114,6 @@ Para instalar no HuniePop, com o jogo fechado:
 
 ```bash
 python scripts/apply_patch_expand.py --install
-python scripts/apply_ui_images.py --assets build/patch_expand/sharedassets0.assets --install
-python scripts/build_dropin.py --zip
+python scripts/apply_ui_images.py --game "D:/SteamLibrary/steamapps/common/HuniePop" --assets build/patch_expand/sharedassets0.assets --out build/patch_ui --install
+python scripts/build_dropin.py --ui-asset build/patch_ui/sharedassets0.assets --zip
 ```

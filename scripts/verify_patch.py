@@ -27,6 +27,8 @@ def load_expected(csv_paths: list[Path]) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--patch-dir", type=Path, default=DEFAULT_PATCH)
     ap.add_argument("--locale", type=Path, action="append", default=None)

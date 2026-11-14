@@ -60,6 +60,8 @@ LOGIC_KEYS = {
     "unique",
 }
 
+_ROLE_RANK = {"fala": 1, "jogador": 1, "jogadora": 1, "escolha": 2, "rotulo": 3}
+
 PAUSE_RE = re.compile(r"(?:\u00b7{2,}|\.{3,}|…+)")
 EU_RE = re.compile(
     r"\b("
@@ -120,7 +122,55 @@ def pause_count(text: str) -> int:
     return len(PAUSE_RE.findall(text or ""))
 
 
-def flags_for(en: str, pt: str) -> list[str]:
+def is_choice_label(field_path: str) -> bool:
+    """The button caption, not the spoken line nested inside the option."""
+    fp = field_path or ""
+    return (
+        "responseOptions" in fp
+        and fp.endswith(".text")
+        and "dialogLine" not in fp
+        and "sceneLine" not in fp
+        and "secondaryText" not in fp
+    )
+
+
+def budget_role(field_path: str, display_role: str) -> str:
+    if is_choice_label(field_path):
+        return "escolha"
+    if display_role == "escolha":
+        return "fala"
+    return display_role or "fala"
+
+
+def fit_budget(en: str, cat: str = "", role: str = "") -> tuple[int, str]:
+    """Each line is drawn alone, so the budget is that line's English length.
+
+    The speech bubble, the phone and the buttons each keep a fixed label.
+    A shorter neighbor does not donate characters to the next phrase.
+    """
+    n = len(en or "")
+    if cat == "ui" or role == "escolha":
+        kind = "botao"
+    elif role == "rotulo":
+        kind = "rotulo"
+    elif role in ("fala", "jogador", "jogadora") or cat == "dialogue":
+        kind = "fala"
+    elif cat == "item":
+        kind = "item"
+    elif cat == "message":
+        kind = "mensagem"
+    else:
+        kind = "curto"
+    return n, kind
+
+
+def fit_view(en: str, pt: str, cat: str = "", role: str = "") -> dict:
+    limit, kind = fit_budget(en, cat, role)
+    shown = transform((pt or "").strip()) if (pt or "").strip() else ""
+    return {"used": len(shown), "limit": limit, "kind": kind, "en": len(en or "")}
+
+
+def flags_for(en: str, pt: str, cat: str = "", role: str = "") -> list[str]:
     en = en or ""
     pt = (pt or "").strip()
     flags: list[str] = []
@@ -143,7 +193,8 @@ def flags_for(en: str, pt: str) -> list[str]:
             flags.append("reescrito")
     if pause_count(en) > pause_count(pt):
         flags.append("pausa")
-    if len(en) > 20 and len(pt) > max(40, int(len(en) * 1.8)):
+    fit = fit_view(en, pt, cat, role)
+    if fit["used"] > fit["limit"]:
         flags.append("longo")
     if pt and len(en) > 40 and len(pt) < int(len(en) * 0.45):
         flags.append("curto")
@@ -197,6 +248,7 @@ class Store:
         self.by_text: dict[str, dict] = {}
         for row in self.rows:
             self.by_text.setdefault(row.get("text") or "", row)
+        self.roles = self._strict_roles()
         self._catalog = None
 
     @classmethod
@@ -215,18 +267,42 @@ class Store:
                 review = loaded
         return cls(rows, groups, review, locale, ascii_path, review_path)
 
+    def _role_for(self, line: dict, path_set: set[str]) -> str:
+        fp = line.get("field_path") or ""
+        pair = fp.endswith(".text") and "secondaryText" not in fp and fp[: -len("text")] + "secondaryText" in path_set
+        return budget_role(fp, role_of(fp, pair))
+
+    def _strict_roles(self) -> dict[str, str]:
+        """Tightest layout each string has to survive, across every scene."""
+        best: dict[str, str] = {}
+        for group in self.groups:
+            lines = group.get("lines") or []
+            path_set = {ln.get("field_path") or "" for ln in lines}
+            for line in lines:
+                row = self._row_for_line(line)
+                if not row:
+                    continue
+                role = self._role_for(line, path_set)
+                sid = row["sample_id"]
+                if _ROLE_RANK.get(role, 0) > _ROLE_RANK.get(best.get(sid, ""), 0):
+                    best[sid] = role
+        return best
+
     def line_view(self, row: dict, where: list[str] | None = None) -> dict:
         en = row.get("text") or ""
         pt = row.get("pt_BR") or ""
+        cat = row.get("category") or "other"
+        role = self.roles.get(row["sample_id"], "")
         meta = self.review.get("lines", {}).get(row["sample_id"], {})
         return {
             "id": row["sample_id"],
-            "cat": row.get("category") or "other",
+            "cat": cat,
             "n": int(row.get("occurrences") or 0),
             "en": en,
             "pt": pt,
             "game": transform(pt),
-            "flags": flags_for(en, pt),
+            "flags": flags_for(en, pt, cat, role),
+            "fit": fit_view(en, pt, cat, role),
             "status": meta.get("status") or "",
             "note": meta.get("note") or "",
             "updated": meta.get("updated") or "",
@@ -295,19 +371,18 @@ class Store:
             group = next((g for g in self.groups if g.get("group_id") == group_id), None)
             if not group:
                 return None
-            paths = [ln.get("field_path") or "" for ln in group.get("lines") or []]
-            path_set = set(paths)
+            lines_src = group.get("lines") or []
+            path_set = {ln.get("field_path") or "" for ln in lines_src}
             lines = []
-            for index, line in enumerate(group.get("lines") or []):
+            for index, line in enumerate(lines_src):
                 row = self._row_for_line(line)
                 fp = line.get("field_path") or ""
-                pair = False
-                if fp.endswith(".text") and "secondaryText" not in fp:
-                    pair = fp[: -len("text")] + "secondaryText" in path_set
+                pair = fp.endswith(".text") and "secondaryText" not in fp and fp[: -len("text")] + "secondaryText" in path_set
                 if row:
                     view = self.line_view(row)
                 else:
                     en = line.get("text") or ""
+                    role = self._role_for(line, path_set)
                     view = {
                         "id": "",
                         "cat": "dialogue",
@@ -315,7 +390,8 @@ class Store:
                         "en": en,
                         "pt": "",
                         "game": "",
-                        "flags": flags_for(en, ""),
+                        "flags": flags_for(en, "", "dialogue", role),
+                        "fit": fit_view(en, "", "dialogue", role),
                         "status": "",
                         "note": "",
                         "updated": "",
@@ -339,7 +415,15 @@ class Store:
             if not row:
                 return None
             en = row.get("text") or ""
-            return {"id": sample_id, "pt": pt, "game": transform(pt), "flags": flags_for(en, pt)}
+            cat = row.get("category") or "other"
+            role = self.roles.get(sample_id, "")
+            return {
+                "id": sample_id,
+                "pt": pt,
+                "game": transform(pt),
+                "flags": flags_for(en, pt, cat, role),
+                "fit": fit_view(en, pt, cat, role),
+            }
 
     def update(self, sample_id: str, pt: str, status: str, note: str) -> dict:
         if not ID_RE.fullmatch(sample_id or ""):
@@ -412,6 +496,11 @@ def _stats(strings: list[dict]) -> dict:
     approved = sum(1 for item in strings if item.get("status") == "ok")
     needs_work = sum(1 for item in strings if item.get("status") == "fix")
     applied = sum(1 for item in strings if (item.get("pt") or "").strip() and item.get("pt") != item.get("en"))
+    overflows = sum(
+        1
+        for item in strings
+        if (item.get("fit") or {}).get("used", 0) > (item.get("fit") or {}).get("limit", 0)
+    )
     return {
         "total": len(strings),
         "problems": problems,
@@ -419,4 +508,5 @@ def _stats(strings: list[dict]) -> dict:
         "approved": approved,
         "needs_work": needs_work,
         "applied": applied,
+        "overflows": overflows,
     }

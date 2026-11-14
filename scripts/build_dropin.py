@@ -40,6 +40,13 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Also write dist/HuniePop_PT-BR-<version>.zip",
     )
+    ap.add_argument(
+        "--ui-asset",
+        type=Path,
+        default=None,
+        help="sharedassets0.assets already carrying the PT UI sprites "
+        "(apply_ui_images.py output); replaces the text-only copy",
+    )
     args = ap.parse_args(argv)
 
     version = "0.0.0"
@@ -81,6 +88,21 @@ def main(argv: list[str] | None = None) -> int:
         print("Nothing to package — no patched assets.", file=sys.stderr)
         return 1
 
+    if args.ui_asset:
+        if not args.ui_asset.is_file():
+            print(f"Missing UI asset: {args.ui_asset}", file=sys.stderr)
+            return 1
+        dest = data_out / "sharedassets0.assets"
+        shutil.copy2(args.ui_asset, dest)
+        size = dest.stat().st_size
+        entry = next((e for e in copied if e["file"] == "sharedassets0.assets"), None)
+        if entry is None:
+            entry = {"file": "sharedassets0.assets", "strings_replaced": 0}
+            copied.append(entry)
+        entry["size"] = size
+        entry["ui_sprites"] = True
+        print(f"UI sprites -> sharedassets0.assets ({size} bytes, {args.ui_asset.name})", flush=True)
+
     if README_SRC.is_file():
         shutil.copy2(README_SRC, args.out / "LEIA-ME.txt")
     else:
@@ -93,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
     meta = {
         "package": "HuniePop_PT-BR",
         "version": version,
-        "channel": "alpha",
+        "channel": "beta",
         "install": "Merge HuniePop_Data into the Steam HuniePop folder",
         "files": copied,
         "source_summary": summary_path.name,

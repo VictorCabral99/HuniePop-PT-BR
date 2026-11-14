@@ -14,3 +14,11 @@ venv/
 export/raw/
 export_run.log
 *.tmp
+
+# Sprite exports derived from the base game (do not redistribute)
+export/ui_images/
+export/ui_sprites/
+export/ui_pt_preview/
+
+# Local snapshots of what is installed in the game folder
+assets/installed/

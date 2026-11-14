@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from store import GROUP_RE, Store
 
 STATIC = Path(__file__).resolve().parent / "static"
+FONT = Path(__file__).resolve().parent.parent / "assets" / "fonts" / "Exo-Variable.ttf"
 MAX_BODY = 200_000
 
 
@@ -55,6 +56,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path in {"/app.js", "/app.css"}:
             self._file(STATIC / parsed.path.lstrip("/"))
+            return
+        if parsed.path == "/exo.ttf":
+            self._file(FONT)
             return
         self._json({"error": "não encontrado"}, 404)
 
@@ -126,6 +130,8 @@ class Handler(BaseHTTPRequestHandler):
             kind = "text/javascript; charset=utf-8"
         elif path.suffix == ".css":
             kind = "text/css; charset=utf-8"
+        elif path.suffix == ".ttf":
+            kind = "font/ttf"
         data = path.read_bytes()
         self.send_response(200)
         self.send_header("Content-Type", kind)
